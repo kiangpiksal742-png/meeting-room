@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Meeting Room Free</title>
+
+<style>
+body {
+  font-family: Arial;
+  background: #f4f6f9;
+  margin: 0;
+  padding: 20px;
+}
+
+.container {
+  max-width: 900px;
+  margin: auto;
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+
+h1 {
+  text-align: center;
+  color: #2c3e50;
+}
+
+.form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+input, select, button {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+button {
+  background: #3498db;
+  color: white;
+  cursor: pointer;
+  border: none;
+}
+
+button:hover {
+  background: #2980b9;
+}
+
+.stats {
+  display: flex;
+  justify-content: space-between;
+  margin: 15px 0;
+  padding: 10px;
+  background: #ecf0f1;
+  border-radius: 8px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: center;
+}
+
+th {
+  background: #3498db;
+  color: white;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>🏢 Meeting Room Free</h1>
+
+<div class="stats">
+  <div>🎯 Total Free: <b>5</b></div>
+  <div>✅ Used: <b id="used">0</b></div>
+  <div>⚡ Remaining: <b id="remaining">5</b></div>
+</div>
+
+<div class="form">
+  <input type="date" id="date">
+  <input type="text" id="company" placeholder="Company Name">
+
+  <select id="duration">
+    <option value="0.5">Half Day</option>
+    <option value="1">Full Day</option>
+  </select>
+
+  <button onclick="addRecord()">Add Event</button>
+</div>
+
+<table>
+<thead>
+<tr>
+  <th>Date</th>
+  <th>Company</th>
+  <th>Duration</th>
+</tr>
+</thead>
+<tbody id="tableBody"></tbody>
+</table>
+
+</div>
+
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, addDoc, onSnapshot } 
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+/* 🔥 YOUR FIREBASE CONFIG */
+const firebaseConfig = {
+  apiKey: "AIzaSyBrcZIjewF-r5h55REdSn3Ow-PFDVJs6kw",
+  authDomain: "meeting-room-system-da43e.firebaseapp.com",
+  projectId: "meeting-room-system-da43e",
+  storageBucket: "meeting-room-system-da43e.firebasestorage.app",
+  messagingSenderId: "116112982064",
+  appId: "1:116112982064:web:74524f6238fc1fc7952df5",
+  measurementId: "G-T7XBN6CRPD"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const MAX_FREE = 5;
+
+/* ➕ ADD DATA */
+window.addRecord = async function() {
+  await addDoc(collection(db, "meeting_free"), {
+    date: document.getElementById("date").value,
+    company: document.getElementById("company").value,
+    duration: document.getElementById("duration").value
+  });
+
+  document.getElementById("company").value = "";
+};
+
+/* 🔄 REALTIME LOAD */
+onSnapshot(collection(db, "meeting_free"), (snapshot) => {
+
+  let table = document.getElementById("tableBody");
+  table.innerHTML = "";
+
+  let used = 0;
+
+  snapshot.forEach(doc => {
+    let data = doc.data();
+    used++;
+
+    table.innerHTML += `
+      <tr>
+        <td>${data.date}</td>
+        <td>${data.company}</td>
+        <td>${data.duration == 0.5 ? "Half Day" : "Full Day"}</td>
+      </tr>
+    `;
+  });
+
+  document.getElementById("used").innerText = used;
+  document.getElementById("remaining").innerText = MAX_FREE - used;
+});
+
+</script>
+
+</body>
+</html>
